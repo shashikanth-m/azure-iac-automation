@@ -1,0 +1,34 @@
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  backendResourceGroup: 'rg-iac-backend'
+  backendStorageAccount: ‘smstoragetf’
+  backendContainer: 'tfstate'
+  backendKey: 'terraform.tfstate'
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x'
+
+- task: TerraformInstaller@0
+  inputs:
+    terraformVersion: '1.5.0'
+
+- script: |
+    terraform init \
+      -backend-config="resource_group_name=$(backendResourceGroup)" \
+      -backend-config="storage_account_name=$(backendStorageAccount)" \
+      -backend-config="container_name=$(backendContainer)" \
+      -backend-config="key=$(backendKey)"
+  displayName: 'Terraform Init'
+
+- script: terraform plan
+  displayName: 'Terraform Plan'
+
+- script: terraform apply -auto-approve
+  displayName: 'Terraform Apply'
